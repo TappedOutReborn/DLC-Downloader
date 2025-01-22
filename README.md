@@ -4,7 +4,7 @@ DLC Downloader for The Simpsons: Tapped Out. It takes a while to download everyt
 ## Usage
 You will need about 30GB of free storage, and [python3](https://www.python.org) installed.
 ```
-python3 dlcDownloader.py
+python3 downloadDlcs.py
 ```
 
 ## Configuration
