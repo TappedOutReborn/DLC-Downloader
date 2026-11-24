@@ -50,19 +50,36 @@ def log(severity: int, message: str):
 
 def downloadFile(url: str, filename: str):
     os.makedirs(OUT_DIR, exist_ok=True)
+    filepath = os.path.join(OUT_DIR, filename)
 
-    response = get(url)
-    if not response.status_code == 200:
-        log(1, f"Non 200 response ({response.status_code}). Skipping... ({url})")
-        return
+    # skipping already downloaded files
+    if os.path.exists(filepath) and os.path.getsize(filepath) > 0:
+        # reading the index for comparison with the archive
+        if "Index" in filename or filename.endswith(".xml"):
+            with open(filepath, "rb") as existingFile:
+                return existingFile.read()
+        return None
 
-    data = response.content
+    # file downloading with retries after connection error
+    while True:
+        try:
+            response = get(url)
+            if not response.status_code == 200:
+                log(1, f"Non 200 response ({response.status_code}). Skipping... ({url})")
+                return None
 
-    log(0, f"Downloaded {filename} ({len(data)} bytes).")
-    with open(OUT_DIR + f"/{filename}", "wb+") as outFile:
-        outFile.write(data)
+            data = response.content
 
-    return data  # So it can be used by other functions, but still be saved to disk
+            log(0, f"Downloaded {filename} ({len(data)} bytes).")
+            with open(filepath, "wb+") as outFile:
+                outFile.write(data)
+
+            return data
+
+        except Exception as e:
+            log(1, f"Connection error ({e}). Retrying {filename} in 5 seconds...")
+            sleep(5)
+
 
 
 def getDLCIndexXml(url: str, filename: str):
